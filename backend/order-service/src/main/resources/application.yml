@@ -1,0 +1,64 @@
+server:
+  port: 8085
+  error:
+    include-message: always
+    include-binding-errors: always
+    whitelabel:
+      enabled: false
+
+spring:
+  application:
+    name: order-service
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    listner:
+      auto-startup: false
+
+payment:
+  service:
+    url: lb://payment-service #${PAYMENT_SERVICE_URL}  # URL for payment service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://service-registry:8761/eureka/ #${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+  instance:
+    lease-renewal-interval-in-seconds: 5
+    preferIpAddress: true
+  register-with-eureka: true  # Ensure it's set to true
+
+  fetch-registry: true  # Allow service discovery
+
+debug: true
+
+
+resilience4j.circuitbreaker:
+  instances:
+    myCircuitBreaker:
+      registerHealthIndicator: true
+      slidingWindowSize: 5
+      failureRateThreshold: 50
+      waitDurationInOpenState: 11s
+      permittedNumberOfCallsInHalfOpenState: 3
+      recordExceptions:
+        - org.springframework.web.client.HttpServerErrorException
+        - org.springframework.web.client.ResourceAccessException
+
+
+logging:
+  level:
+    io.github.resilience4j.circuitbreaker: DEBUG
+    io.github.resilience4j.spring6.circuitbreaker: DEBUG
+    org.springframework.aop: DEBUG

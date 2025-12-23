@@ -1,0 +1,62 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: api-gateway
+  error:
+    include-message: always
+    include-binding-errors: always
+    whitelabel:
+      enabled: false
+  cloud:
+    gateway:
+#      globalcors:
+#        corsConfigurations:
+#          '[/**]':
+#            allowedOrigins: "http://localhost:3000"
+#            allowedMethods:
+#              - GET
+#              - POST
+#              - PUT
+#              - DELETE
+#              - OPTIONS
+#            allowedHeaders: "*"
+#            allowCredentials: true
+      routes:
+        - id: user-service
+          uri: lb://user-service #${USER_SERVICE_URL}
+          predicates:
+            - Path=/users/**
+        - id: order-service
+          uri: lb://order-service #${ORDER_SERVICE_URL}
+          predicates:
+            - Path=/order/**
+        - id: payment-service
+          uri: lb://payment-service #${PAYMENT_SERVICE_URL}
+          predicates:
+            - Path=/payment/**
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://service-registry:8761/eureka/ #${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+    instance:
+      lease-renewal-interval-in-seconds: 5
+      preferIpAddress: true
+    register-with-eureka: true  # Ensure it's set to true
+    fetch-registry: true  # Allow service discovery
+
+logging:
+  level:
+    com.netflix.eureka: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
