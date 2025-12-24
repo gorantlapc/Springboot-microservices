@@ -36,11 +36,9 @@ jobs:
 
       - name: Build and Push Microservice Images to ACR
         run: |
-          ./mvnw -B clean package -DskipTests --file pom.xml
-          
           SERVICES=("service-registry" "api-gateway" "user-service" "order-service" "payment-service" "notification-service" "inventory-service")
           
           for SERVICE in "${SERVICES[@]}"; do
             echo "Building and pushing $SERVICE..."
-            ./mvnw spring-boot:build-image -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+            ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
           done
