@@ -22,11 +22,17 @@ jobs:
           cache: maven
 
       - name: Login to Azure Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3 # This approach needs admin rights on the repo
         with:
           registry: springbootmicroervices.azurecr.io
           username: ${{ secrets.AZURE_ACR_USERNAME }}
           password: ${{ secrets.AZURE_ACR_PASSWORD }}
+
+#          ToDO: Alternatively, use Azure/login@v1 to login to Azure and then use Azure/ACR@v1 to login to ACR without needing admin rights on the repo
+#              Or use Github OIDC and federated credentials to login to Azure
+
+      - name: Give execute permission to mvnw
+        run: chmod +x mvnw
 
       - name: Build and Push Microservice Images to ACR
         run: |
