@@ -23,6 +23,7 @@
         <module>backend/order-service</module>
         <module>backend/payment-service</module>
         <module>backend/notification-service</module>
+        <module>backend/inventory-service</module>
     </modules>
 
     <properties>

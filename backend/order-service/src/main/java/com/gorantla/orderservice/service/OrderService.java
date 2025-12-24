@@ -20,19 +20,27 @@ public class OrderService {
 
     private final RestTemplate restTemplate;
 
+    private final InventoryClient inventoryClient;
+
     private final KafkaProducer kafkaProducer;
 
-    public OrderService(RestTemplate restTemplate, KafkaProducer kafkaProducer) {
+    public OrderService(RestTemplate restTemplate, InventoryClient inventoryClient, KafkaProducer kafkaProducer) {
         this.restTemplate = restTemplate;
+        this.inventoryClient = inventoryClient;
         this.kafkaProducer = kafkaProducer;
     }
 
     @CircuitBreaker(name = "myCircuitBreaker", fallbackMethod = "fallbackMethod")
     public Message processOrder(Order order) {
+        // Call the inventory service to check and reserve stock
+        boolean isInStock = inventoryClient.isInStock(order.productCode(), order.quantity());
+        if (!isInStock) {
+            throw new IllegalStateException("Product is out of stock: " + order.productCode());
+        }
 
         // Call the payment service to make a payment for the order
         String message = restTemplate.postForObject(
-                paymentServiceUrl + "/payment/makePayment",
+                paymentServiceUrl + "/api/payment/makePayment",
                 order.orderId(),
                 String.class
         );
@@ -47,10 +55,8 @@ public class OrderService {
     }
 
     public String fallbackMethod(Throwable throwable) {
-        System.out.println("circuit breaker message " + throwable.getMessage());
         if (throwable instanceof ResourceAccessException || throwable instanceof CallNotPermittedException
                 || throwable instanceof HttpServerErrorException) {
-            System.out.println("Payment service is down or unreachable.");
             throw new ServiceUnavailableException("Payment service is currently unavailable.", throwable);
         }
         throw new ServiceUnavailableException("Payment service is currently unavailable.", throwable);
