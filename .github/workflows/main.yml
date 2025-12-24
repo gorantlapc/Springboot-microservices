@@ -1,0 +1,37 @@
+name: Spring Boot Microservices CI/CD
+
+on:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    #  Use JDK 21 for building spring boot microservices.
+    #  Use springboot maven plugin with buildpacks to create docker images and push to Azure Container Registry
+    #  Use parent pom.xml to build all microservices
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and Push Docker Images to Azure Container Registry
+        env:
+          AZURE_CONTAINER_REGISTRY: springbootmicroervices.azurecr.io
+          AZURE_USERNAME: ${{ secrets.AZURE_ACR_USERNAME }}
+          AZURE_PASSWORD: ${{ secrets.AZURE_ACR_PASSWORD }}
+        run: |
+          mvn -B clean package -DskipTests --file pom.xml
+          
+          SERVICES=("service-registry" "api-gateway" "user-service" "order-service" "payment-service" "notification-service" "inventory-service")
+          
+          for SERVICE in "${SERVICES[@]}"; do
+            echo "Building and pushing $SERVICE..."
+            mvn spring-boot:build-image -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest -Dspring-boot.build-image.publish=true -Dspring-boot.build-image.docker.username=$AZURE_USERNAME -Dspring-boot.build-image.docker.password=$AZURE_PASSWORD
+          done
