@@ -37,6 +37,12 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           enable-oidc: true
 
+      - name: Azure Container Registry Login
+        uses: azure/login@v1
+        with:
+          login-server: ${{ vars.AZURE_CONTAINER_REGISTRY }}
+          enable-oidc: true
+
       - name: Give execute permission to mvnw
         run: chmod +x mvnw
 
