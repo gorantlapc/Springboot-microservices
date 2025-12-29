@@ -25,26 +25,26 @@ spring:
 #            allowCredentials: true
       routes:
         - id: user-service
-          uri: lb://user-service #${USER_SERVICE_URL}
+          uri: ${USER_SERVICE_URL}
           predicates:
             - Path=/api/users/**
         - id: order-service
-          uri: lb://order-service #${ORDER_SERVICE_URL}
+          uri: ${ORDER_SERVICE_URL}
           predicates:
             - Path=/api/order/**
         - id: payment-service
-          uri: lb://payment-service #${PAYMENT_SERVICE_URL}
+          uri: ${PAYMENT_SERVICE_URL}
           predicates:
             - Path=/api/payment/**
         - id: inventory-service
-          uri: lb://inventory-service #${INVENTORY_SERVICE_URL}
+          uri: ${INVENTORY_SERVICE_URL}
           predicates:
             - Path=/api/inventory/**
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://service-registry:8761/eureka/ #${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
     instance:
       lease-renewal-interval-in-seconds: 5
       preferIpAddress: true

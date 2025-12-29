@@ -37,6 +37,13 @@ services:
       - "8084:8084"
     depends_on:
       - service-registry
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      USER_SERVICE_URL: lb://user-service
+      ORDER_SERVICE_URL: lb://order-service
+      PAYMENT_SERVICE_URL: lb://payment-service
+      INVENTORY_SERVICE_URL: lb://inventory-service
+
 
   user-service:
 #    build: ./backend/user-service
@@ -46,6 +53,8 @@ services:
     depends_on:
       - service-registry
       - api-gateway
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
 
   order-service:
 #    build: ./backend/order-service
@@ -58,6 +67,8 @@ services:
       - kafka
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      PAYMENT_SERVICE_URL: lb://payment-service
 
   payment-service:
 #    build: ./backend/payment-service
@@ -67,6 +78,8 @@ services:
     depends_on:
       - service-registry
       - api-gateway
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
 
   notification-service:
 #    build: ./backend/notification-service
@@ -79,8 +92,23 @@ services:
       - kafka
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
       EMAIL_ID: your_email_id_here
       EMAIL_PASSWORD: your_email_password_here # Create app-specific password for security reasons
+
+
+  inventory-service:
+#    build: ./backend/inventory-service
+    image: springbootmicroervices.azurecr.io/inventory-service:latest
+    ports:
+      - "8088:8088"
+    depends_on:
+      - service-registry
+      - api-gateway
+      - kafka
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
 
 networks:
     default:
