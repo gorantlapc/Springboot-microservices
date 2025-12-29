@@ -41,6 +41,9 @@ jobs:
         uses: azure/login@v1
         with:
           login-server: ${{ vars.AZURE_CONTAINER_REGISTRY }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           enable-oidc: true
 
       - name: Give execute permission to mvnw
