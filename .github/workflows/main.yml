@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     env:
-      AZURE_CONTAINER_REGISTRY: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CONTAINER_REGISTRY: ${{ vars.AZURE_CONTAINER_REGISTRY }}
 
     #  Use JDK 21 for building spring boot microservices.
     #  Use springboot maven plugin with buildpacks to create docker images and push to Azure Container Registry
@@ -43,13 +43,10 @@ jobs:
       - name: Build and Push Microservice Images to ACR
         run: |
           SERVICES=("service-registry" "api-gateway" "user-service" "order-service" "payment-service" "notification-service" "inventory-service")
-          
           for SERVICE in "${SERVICES[@]}"; do
-            echo "Building and pushing $SERVICE..."
-#            Build Docker image using Spring Boot Maven Plugin with Buildpacks
-            ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
-#           Push Docker image to ACR
-            docker push $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+          echo "Building and pushing $SERVICE..."
+          ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+          docker push $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
           done
 
       - name: Verify Images in ACR
@@ -65,9 +62,7 @@ jobs:
       - name: Deploy to Development Environment (Azure Container Apps)
         run: |
           echo "Deploying microservices to Development Environment..."
-
           SERVICES=("service-registry-app" "api-gateway-app" "user-service-app" "order-service-app" "payment-service-app" "notification-service-app" "inventory-service-app")
-          
           for SERVICE in "${SERVICES[@]}"; do
             echo "Deploying $SERVICE to Azure Container Apps..."
             az containerapp update --name $SERVICE --resource-group ${{ vars.RESOURCE_GROUP }} --image $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
