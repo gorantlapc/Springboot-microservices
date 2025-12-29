@@ -37,14 +37,8 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           enable-oidc: true
 
-      - name: Azure Container Registry Login
-        uses: azure/login@v1
-        with:
-          login-server: ${{ vars.AZURE_CONTAINER_REGISTRY }}
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-          enable-oidc: true
+      - name: Login to ACR
+        run: az acr login --name ${{ vars.AZURE_CONTAINER_REGISTRY_NAME }}
 
       - name: Give execute permission to mvnw
         run: chmod +x mvnw
