@@ -1,13 +1,21 @@
+# ToDo: CI/CD to be seperated into multiple workflows for better maintainability.
 name: Spring Boot Microservices CI/CD
 
 on:
   push:
     branches: [ "dev" ]
 
+# Enable GitHub OIDC for secure authentication to Azure
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     environment: dev
+    env:
+      AZURE_CONTAINER_REGISTRY: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
     #  Use JDK 21 for building spring boot microservices.
     #  Use springboot maven plugin with buildpacks to create docker images and push to Azure Container Registry
@@ -21,15 +29,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Login to Azure Container Registry
-        uses: docker/login-action@v3 # This approach needs admin rights on the repo
+      - name: Azure Login (OIDC)
+        uses: azure/login@v1
         with:
-          registry: springbootmicroervices.azurecr.io
-          username: ${{ secrets.AZURE_ACR_USERNAME }}
-          password: ${{ secrets.AZURE_ACR_PASSWORD }}
-
-#          ToDO: Alternatively, use Azure/login@v1 to login to Azure and then use Azure/ACR@v1 to login to ACR without needing admin rights on the repo
-#              Or use Github OIDC and federated credentials to login to Azure
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          enable-oidc: true
 
       - name: Give execute permission to mvnw
         run: chmod +x mvnw
@@ -40,5 +46,30 @@ jobs:
           
           for SERVICE in "${SERVICES[@]}"; do
             echo "Building and pushing $SERVICE..."
+#            Build Docker image using Spring Boot Maven Plugin with Buildpacks
             ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+#           Push Docker image to ACR
+            docker push $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
           done
+
+      - name: Verify Images in ACR
+        run: |
+          docker pull $AZURE_CONTAINER_REGISTRY/service-registry:latest
+          docker pull $AZURE_CONTAINER_REGISTRY/api-gateway:latest
+          docker pull $AZURE_CONTAINER_REGISTRY/user-service:latest
+          docker pull $AZURE_CONTAINER_REGISTRY/order-service:latest
+          docker pull $AZURE_CONTAINER_REGISTRY/payment-service:latest
+          docker pull $AZURE_CONTAINER_REGISTRY/notification-service:latest
+          docker pull $AZURE_CONTAINER_REGISTRY/inventory-service:latest
+
+      - name: Deploy to Development Environment (Azure Container Apps)
+        run: |
+          echo "Deploying microservices to Development Environment..."
+
+          SERVICES=("service-registry-app" "api-gateway-app" "user-service-app" "order-service-app" "payment-service-app" "notification-service-app" "inventory-service-app")
+          
+          for SERVICE in "${SERVICES[@]}"; do
+            echo "Deploying $SERVICE to Azure Container Apps..."
+            az containerapp update --name $SERVICE --resource-group ${{ vars.RESOURCE_GROUP }} --image $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+          done
+          
