@@ -24,26 +24,16 @@ services:
       # You can generate a random UUID for this
       - KAFKA_CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
 
-  service-registry:
-#    build: ./backend/service-registry
-    image: springbootmicroervices.azurecr.io/service-registry:latest
-    ports:
-      - "8761:8761"
-
   api-gateway:
 #    build: ./backend/api-gateway
     image: springbootmicroervices.azurecr.io/api-gateway:latest
     ports:
       - "8084:8084"
-    depends_on:
-      - service-registry
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
-      USER_SERVICE_URL: lb://user-service
-      ORDER_SERVICE_URL: lb://order-service
-      PAYMENT_SERVICE_URL: lb://payment-service
-      INVENTORY_SERVICE_URL: lb://inventory-service
-
+      USER_SERVICE_URL: http://user-service:8082
+      ORDER_SERVICE_URL: http://order-service:8085
+      PAYMENT_SERVICE_URL: http://payment-service:8086
+      INVENTORY_SERVICE_URL: http://inventory-service:8088
 
   user-service:
 #    build: ./backend/user-service
@@ -51,10 +41,7 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - service-registry
       - api-gateway
-    environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
 
   order-service:
 #    build: ./backend/order-service
@@ -62,13 +49,12 @@ services:
     ports:
       - "8085:8085"
     depends_on:
-      - service-registry
       - api-gateway
       - kafka
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
-      PAYMENT_SERVICE_URL: lb://payment-service
+      PAYMENT_SERVICE_URL: http://payment-service:8086
+      INVENTORY_SERVICE_URL: http://inventory-service:8088
 
   payment-service:
 #    build: ./backend/payment-service
@@ -76,10 +62,7 @@ services:
     ports:
       - "8086:8086"
     depends_on:
-      - service-registry
       - api-gateway
-    environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
 
   notification-service:
 #    build: ./backend/notification-service
@@ -87,12 +70,10 @@ services:
     ports:
       - "8087:8087"
     depends_on:
-      - service-registry
       - api-gateway
       - kafka
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
       EMAIL_ID: your_email_id_here
       EMAIL_PASSWORD: your_email_password_here # Create app-specific password for security reasons
 
@@ -103,12 +84,10 @@ services:
     ports:
       - "8088:8088"
     depends_on:
-      - service-registry
       - api-gateway
       - kafka
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
 
 networks:
     default:

@@ -3,7 +3,7 @@ name: Spring Boot Microservices CI/CD
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "deploy_to_azure" ]
 
 # Enable GitHub OIDC for secure authentication to Azure
 permissions:
@@ -45,7 +45,7 @@ jobs:
 
       - name: Build and Push Microservice Images to ACR
         run: |
-          SERVICES=("service-registry" "api-gateway" "user-service" "order-service" "payment-service" "notification-service" "inventory-service")
+          SERVICES=("api-gateway" "user-service" "order-service" "payment-service" "notification-service" "inventory-service")
           for SERVICE in "${SERVICES[@]}"; do
           echo "Building and pushing $SERVICE..."
           ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
@@ -54,7 +54,6 @@ jobs:
 
       - name: Verify Images in ACR
         run: |
-          docker pull $AZURE_CONTAINER_REGISTRY/service-registry:latest
           docker pull $AZURE_CONTAINER_REGISTRY/api-gateway:latest
           docker pull $AZURE_CONTAINER_REGISTRY/user-service:latest
           docker pull $AZURE_CONTAINER_REGISTRY/order-service:latest
@@ -65,7 +64,7 @@ jobs:
       - name: Deploy to Development Environment (Azure Container Apps)
         run: |
           echo "Deploying microservices to Development Environment..."
-          SERVICES=("service-registry-app" "api-gateway-app" "user-service-app" "order-service-app" "payment-service-app" "notification-service-app" "inventory-service-app")
+          SERVICES=("api-gateway-app" "user-service-app" "order-service-app" "payment-service-app" "notification-service-app" "inventory-service-app")
           for SERVICE in "${SERVICES[@]}"; do
             echo "Deploying $SERVICE to Azure Container Apps..."
             az containerapp update --name $SERVICE --resource-group ${{ vars.RESOURCE_GROUP }} --image $AZURE_CONTAINER_REGISTRY/$SERVICE:latest

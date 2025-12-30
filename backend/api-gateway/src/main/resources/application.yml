@@ -41,20 +41,9 @@ spring:
           predicates:
             - Path=/api/inventory/**
 
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-    instance:
-      lease-renewal-interval-in-seconds: 5
-      preferIpAddress: true
-    register-with-eureka: true  # Ensure it's set to true
-    fetch-registry: true  # Allow service discovery
-
 logging:
   level:
-    com.netflix.eureka: DEBUG
-    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway: ${LOG_LEVEL_GATEWAY:=INFO}
 
 management:
   endpoints:
