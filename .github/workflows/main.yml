@@ -17,13 +17,13 @@ jobs:
     env:
       AZURE_CONTAINER_REGISTRY: ${{ vars.AZURE_CONTAINER_REGISTRY }}
 
-    #  Use JDK 21 for building spring boot microservices.
-    #  Use springboot maven plugin with buildpacks to create docker images and push to Azure Container Registry
+      #  Use JDK 21 for building spring boot microservices.
+      #  Use springboot maven plugin with buildpacks to create docker images and push to Azure Container Registry
       #  Use parent pom.xml to build all microservices
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -45,17 +45,41 @@ jobs:
       - name: Give execute permission to mvnw
         run: chmod +x mvnw
 
+      - name: Detect changed files
+        id: detect_changes
+        run: |
+          BASE_REF="${{ github.event.before }}"
+          HEAD_REF="${{ github.sha }}"
+
+          git fetch --no-tags --prune --depth=2 origin "$BASE_REF" || true
+
+          CHANGED_FILES=$(git diff --name-only "$BASE_REF" "$HEAD_REF" || true)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          if [ "$BASE_REF" = "0000000000000000000000000000000000000000" ] || echo "$CHANGED_FILES" | grep -qE '(^pom\.xml|^backend/pom\.xml)'; then
+            echo "build_all=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_all=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and Push Microservice Images to ACR
         run: |
           SERVICES=("api-gateway" "user-service" "order-service" "payment-service" "notification-service" "inventory-service")
+          CHANGED_FILES="${{ steps.detect_changes.outputs.changed_files }}"
+          BUILD_ALL="${{ steps.detect_changes.outputs.build_all }}"
           for SERVICE in "${SERVICES[@]}"; do
-            if ! git diff --name-only origin/deploy_to_azure...HEAD | grep -q "backend/$SERVICE/"; then
-              echo "No changes in $SERVICE, skipping build and push."
-              continue
+            if [ "$BUILD_ALL" = "false" ] && ! echo "$CHANGED_FILES" | grep -qE "^backend/$SERVICE/"; then
+                echo "No changes in $SERVICE, skipping build."
+                continue
             fi
-          echo "Building and pushing $SERVICE..."
-          ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
-          docker push $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+            echo "Building and pushing $SERVICE..."
+            ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+            docker push $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
           done
 
       - name: Verify Images in ACR
@@ -71,12 +95,15 @@ jobs:
         run: |
           echo "Deploying microservices to Development Environment..."
           SERVICES=("api-gateway-app" "user-service-app" "order-service-app" "payment-service-app" "notification-service-app" "inventory-service-app")
+          
+          CHANGED_FILES="${{ steps.detect_changes.outputs.changed_files }}"
+          BUILD_ALL="${{ steps.detect_changes.outputs.build_all }}"
+          
           for SERVICE in "${SERVICES[@]}"; do
-            if ! git diff --name-only origin/deploy_to_azure...HEAD | grep -q "backend/${SERVICE%-app}/"; then
-              echo "No changes in ${SERVICE%-app}, skipping deployment."
-              continue
+            if [ "$BUILD_ALL" = "false" ] && ! echo "$CHANGED_FILES" | grep -qE "^backend/${SERVICE%-app}/"; then
+                echo "No changes in ${SERVICE%-app}, skipping deployment."
+                continue
             fi
             echo "Deploying $SERVICE to Azure Container Apps..."
             az containerapp update --name $SERVICE --resource-group ${{ vars.RESOURCE_GROUP }} --image $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
           done
-          
