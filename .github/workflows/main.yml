@@ -19,9 +19,11 @@ jobs:
 
     #  Use JDK 21 for building spring boot microservices.
     #  Use springboot maven plugin with buildpacks to create docker images and push to Azure Container Registry
-    #  Use parent pom.xml to build all microservices
+      #  Use parent pom.xml to build all microservices
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
