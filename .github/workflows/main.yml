@@ -47,6 +47,10 @@ jobs:
         run: |
           SERVICES=("api-gateway" "user-service" "order-service" "payment-service" "notification-service" "inventory-service")
           for SERVICE in "${SERVICES[@]}"; do
+            if ! git diff --name-only origin/deploy_to_azure...HEAD | grep -q "backend/$SERVICE/"; then
+              echo "No changes in $SERVICE, skipping build and push."
+              continue
+            fi
           echo "Building and pushing $SERVICE..."
           ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
           docker push $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
@@ -66,6 +70,10 @@ jobs:
           echo "Deploying microservices to Development Environment..."
           SERVICES=("api-gateway-app" "user-service-app" "order-service-app" "payment-service-app" "notification-service-app" "inventory-service-app")
           for SERVICE in "${SERVICES[@]}"; do
+            if ! git diff --name-only origin/deploy_to_azure...HEAD | grep -q "backend/${SERVICE%-app}/"; then
+              echo "No changes in ${SERVICE%-app}, skipping deployment."
+              continue
+            fi
             echo "Deploying $SERVICE to Azure Container Apps..."
             az containerapp update --name $SERVICE --resource-group ${{ vars.RESOURCE_GROUP }} --image $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
           done
