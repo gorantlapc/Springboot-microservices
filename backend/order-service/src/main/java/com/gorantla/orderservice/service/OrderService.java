@@ -6,6 +6,8 @@ import com.gorantla.orderservice.data.OrderStatus;
 import com.gorantla.orderservice.exception.ServiceUnavailableException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
@@ -15,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class OrderService {
 
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
     @Value("${payment.service.url}")
     private String paymentServiceUrl;
 
@@ -32,6 +35,7 @@ public class OrderService {
 
     @CircuitBreaker(name = "myCircuitBreaker", fallbackMethod = "fallbackMethod")
     public Message processOrder(Order order) {
+        log.debug("Processing order: {}", order);
         // Call the inventory service to check and reserve stock
         boolean isInStock = inventoryClient.isInStock(order.productCode(), order.quantity());
         if (!isInStock) {
@@ -50,7 +54,7 @@ public class OrderService {
         if (message != null && message.contains("Payment successful")) {
             kafkaProducer.sendMessage("email-events", kafkaMessage);
         }
-
+        log.debug(String.valueOf(kafkaMessage));
         return kafkaMessage;
     }
 
