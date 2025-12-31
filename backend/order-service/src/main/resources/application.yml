@@ -43,3 +43,4 @@ logging:
     io.github.resilience4j.circuitbreaker: ${LOG_LEVEL_CIRCUIT_BREAKER:=INFO}
     io.github.resilience4j.spring6.circuitbreaker: ${LOG_LEVEL_CIRCUIT_BREAKER:=INFO}
     org.springframework.aop: ${LOG_LEVEL_CIRCUIT_BREAKER:=INFO}
+    com.gorantla.orderservice: ${LOG_LEVEL_ORDERSERVICE:=DEBUG}
