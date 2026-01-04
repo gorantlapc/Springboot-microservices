@@ -11,35 +11,25 @@ spring:
       enabled: false
   cloud:
     gateway:
-#      globalcors:
-#        corsConfigurations:
-#          '[/**]':
-#            allowedOrigins: "http://localhost:3000"
-#            allowedMethods:
-#              - GET
-#              - POST
-#              - PUT
-#              - DELETE
-#              - OPTIONS
-#            allowedHeaders: "*"
-#            allowCredentials: true
-      routes:
-        - id: user-service
-          uri: ${USER_SERVICE_URL}
-          predicates:
-            - Path=/api/users/**
-        - id: order-service
-          uri: ${ORDER_SERVICE_URL}
-          predicates:
-            - Path=/api/order/**
-        - id: payment-service
-          uri: ${PAYMENT_SERVICE_URL}
-          predicates:
-            - Path=/api/payment/**
-        - id: inventory-service
-          uri: ${INVENTORY_SERVICE_URL}
-          predicates:
-            - Path=/api/inventory/**
+      server:
+        webflux:
+          routes:
+            - id: user-service
+              uri: ${USER_SERVICE_URL}
+              predicates:
+                - Path=/api/users/**
+            - id: order-service
+              uri: ${ORDER_SERVICE_URL}
+              predicates:
+                - Path=/api/order/**
+            - id: payment-service
+              uri: ${PAYMENT_SERVICE_URL}
+              predicates:
+                - Path=/api/payment/**
+            - id: inventory-service
+              uri: ${INVENTORY_SERVICE_URL}
+              predicates:
+                - Path=/api/inventory/**
 
 logging:
   level:
