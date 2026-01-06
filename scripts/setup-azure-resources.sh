@@ -20,27 +20,83 @@ echo "Creating Azure Container Registry..."
 az acr create --resource-group ${RESOURCE_GROUP} --name ${ACR_NAME} --sku Basic
 echo "Creating Azure Container Apps environment..."
 az containerapp env create --name ${ENV_NAME} --resource-group ${RESOURCE_GROUP} --location ${LOCATION}
+
+ACR_ID=$(az acr show -n $ACR_NAME -g $RG --query id -o tsv)
+
+az containerapp env identity assign \
+  --name ${ENV_NAME} \
+  --resource-group ${RESOURCE_GROUP}
+
+ENV_PRINCIPAL_ID=$(az containerapp env show \
+  --name ${ENV_NAME} \
+  --resource-group ${RESOURCE_GROUP} \
+  --query identity.principalId -o tsv)
+
+az role assignment create \
+  --assignee $ENV_PRINCIPAL_ID \
+  --role AcrPull \
+  --scope $ACR_ID
+
 echo "Creating Azure Container Apps for each microservice..."
 az containerapp create \
   --name api-gateway-app \
   --resource-group ${RESOURCE_GROUP} \
   --environment ${ENV_NAME} \
   --image springbootmicroervices.azurecr.io/api-gateway:latest \
+  --registry-server ${ACR_NAME}.azurecr.io \
   --min-replicas 1 \
   --max-replicas 2 \
   --cpu 0.5 --memory 1Gi --ingress 'external' --target-port 8084 \
   --env-vars \
-    USER_SERVICE_URL=user-service-app:8082 \
-    ORDER_SERVICE_URL=order-service-app:8085 \
-    PAYMENT_SERVICE_URL=payment-service-app:8086 \
-    NOTIFICATION_SERVICE_URL=notification-service-app:8087 \
-    INVENTORY_SERVICE_URL=inventory-service-app:8088
+    USER_SERVICE_URL=http://user-service-app \
+    ORDER_SERVICE_URL=http://order-service-app \
+    PAYMENT_SERVICE_URL=http://payment-service-app \
+    NOTIFICATION_SERVICE_URL=http://notification-service-app \
+    INVENTORY_SERVICE_UR  L=http://inventory-service-app \
+    JAVA_TOOL_OPTIONS="-Dnetty.dns.resolver.type=native"
 
-az containerapp create --name order-service-app --resource-group ${RESOURCE_GROUP} --environment ${ENV_NAME} --image springbootmicroervices.azurecr.io/order-service:latest --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8085 --env-vars PAYMENT_SERVICE_URL=payment-service-app:8086 INVENTORY_SERVICE_URL=inventory-service-app:8088
-az containerapp create --name payment-service-app --resource-group ${RESOURCE_GROUP} --environment ${ENV_NAME} --image springbootmicroervices.azurecr.io/payment-service:latest --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8086
-az containerapp create --name user-service-app --resource-group ${RESOURCE_GROUP} --environment ${ENV_NAME} --image springbootmicroervices.azurecr.io/user-service:latest --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8082
-az containerapp create --name notification-service-app --resource-group ${RESOURCE_GROUP} --environment ${ENV_NAME} --image springbootmicroervices.azurecr.io/notification-service:latest --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8087
-az containerapp create --name inventory-service-app --resource-group ${RESOURCE_GROUP} --environment ${ENV_NAME} --image springbootmicroervices.azurecr.io/inventory-service:latest --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8088
+az containerapp create \
+  --name order-service-app \
+  --resource-group ${RESOURCE_GROUP} \
+  --environment ${ENV_NAME} \
+  --image springbootmicroervices.azurecr.io/order-service:latest \
+  --registry-server ${ACR_NAME}.azurecr.io \
+  --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8085 \
+  --env-vars \
+    PAYMENT_SERVICE_URL=http://payment-service-app \
+    INVENTORY_SERVICE_URL=http://inventory-service-app
+
+az containerapp create \
+  --name payment-service-app \
+  --resource-group ${RESOURCE_GROUP} \
+  --environment ${ENV_NAME} \
+  --image springbootmicroervices.azurecr.io/payment-service:latest \
+  --registry-server ${ACR_NAME}.azurecr.io \
+  --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8086
+
+az containerapp create \
+  --name user-service-app \
+  --resource-group ${RESOURCE_GROUP} \
+  --environment ${ENV_NAME} \
+  --image springbootmicroervices.azurecr.io/user-service:latest \
+  --registry-server ${ACR_NAME}.azurecr.io \
+  --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8082
+
+az containerapp create \
+  --name notification-service-app \
+  --resource-group ${RESOURCE_GROUP} \
+  --environment ${ENV_NAME} \
+  --image springbootmicroervices.azurecr.io/notification-service:latest \
+  --registry-server ${ACR_NAME}.azurecr.io \
+  --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8087
+
+az containerapp create \
+  --name inventory-service-app \
+  --resource-group ${RESOURCE_GROUP} \
+  --environment ${ENV_NAME} \
+  --image springbootmicroervices.azurecr.io/inventory-service:latest \
+  --registry-server ${ACR_NAME}.azurecr.io \
+  --min-replicas 1 --max-replicas 2 --cpu 0.5 --memory 1Gi --ingress 'internal' --target-port 8088
 
 echo "Create OIDC provider and assign roles..."
 az ad app create --display-name "springboot-oidc-app"
