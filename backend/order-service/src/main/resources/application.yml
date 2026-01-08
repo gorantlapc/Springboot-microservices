@@ -13,22 +13,6 @@ spring:
 dapr:
   app-id: order-service
 
-resilience4j.circuitbreaker:
-  instances:
-    myCircuitBreaker:
-      registerHealthIndicator: true
-      slidingWindowSize: 5
-      failureRateThreshold: 50
-      waitDurationInOpenState: 11s
-      permittedNumberOfCallsInHalfOpenState: 3
-      recordExceptions:
-        - org.springframework.web.client.HttpServerErrorException
-        - org.springframework.web.client.ResourceAccessException
-
-
 logging:
   level:
-    io.github.resilience4j.circuitbreaker: ${LOG_LEVEL_CIRCUIT_BREAKER:=INFO}
-    io.github.resilience4j.spring6.circuitbreaker: ${LOG_LEVEL_CIRCUIT_BREAKER:=INFO}
-    org.springframework.aop: ${LOG_LEVEL_CIRCUIT_BREAKER:=INFO}
-    com.gorantla.orderservice: ${LOG_LEVEL_ORDERSERVICE:=DEBUG}
+    com.gorantla.orderservice: ${LOG_LEVEL_ORDERSERVICE:=INFO}

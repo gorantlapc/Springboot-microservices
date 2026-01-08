@@ -36,8 +36,7 @@ services:
     environment:
       DAPR_GRPC_ENDPOINT: http://order-service-dapr:50001
       DAPR_HTTP_ENDPOINT: http://order-service-dapr:3500
-      PAYMENT_SERVICE_URL: http://payment-service:8086
-      INVENTORY_SERVICE_URL: http://inventory-service:8088
+      LOG_LEVEL_ORDERSERVICE: DEBUG
 
     # 3. The Dapr Sidecar for your service
   order-service-dapr:
@@ -108,8 +107,8 @@ services:
     environment:
       DAPR_GRPC_ENDPOINT: http://order-service-dapr:50001
       DAPR_HTTP_ENDPOINT: http://order-service-dapr:3500
-      EMAIL_ID: gorantla.gpc@gmail.com
-      EMAIL_PASSWORD: yixz chyx ebtr relv # Create app-specific password for security reasons
+      EMAIL_ID: your_email_id_here
+      EMAIL_PASSWORD: your_email_password_here # Create app-specific password for security reasons
 
   inventory-service:
 #    build: ./backend/inventory-service
