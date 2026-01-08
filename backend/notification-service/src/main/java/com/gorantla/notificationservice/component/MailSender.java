@@ -1,39 +1,22 @@
-package com.gorantla.notificationservice.service;
+package com.gorantla.notificationservice.component;
 
-import com.gorantla.notificationservice.data.Message;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
-public class EmailService {
+@Component("notificationMailSender")
+public class MailSender {
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
     private final JavaMailSender mailSender;
 
-    public EmailService(JavaMailSender mailSender) {
+    public MailSender(JavaMailSender mailSender) {
         this.mailSender = mailSender;
-    }
-
-    @KafkaListener(topics = "email-events", groupId = "notification-service")
-    public void listenForEmailEvents(Message message) {
-        // Logic to process email events from Kafka
-        switch (message.orderStatus()) {
-            case ORDER_CREATED -> sendEmail(message.orderRequest().userEmail(),
-                    "Order Notification",
-                    "Your order with ID " + message.orderRequest().orderId() + " with " + message.orderRequest().price() + " has been processed.");
-            case ORDER_CANCELLED -> sendEmail(message.orderRequest().userEmail(),
-                    "Order Cancellation",
-                    "Your order with ID " + message.orderRequest().orderId() + " has been cancelled.");
-            case ORDER_UPDATED -> System.out.println("Received email event from Kafka");
-            default -> System.out.println("Unknown event type: " + message.orderStatus());
-        }
     }
 
     public void sendEmail(String to, String subject, String body) {
@@ -61,4 +44,5 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+
 }

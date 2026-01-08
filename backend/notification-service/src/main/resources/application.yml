@@ -4,31 +4,14 @@ server:
 spring:
   application:
     name: notification-service
-
-  # Kafka Configuration
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
-    consumer:
-      group-id: notification-service
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        # header type information disabled to avoid deserialization issues
-        spring.json.add.type.headers: false
-        # Trust the local package
-        spring.json.trusted.packages: "*"
-        # Set default type for deserialization
-        spring.json.value.default.type: com.gorantla.notificationservice.data.Message
-
   mail:
     host: smtp.gmail.com
     port: 587
     username: ${EMAIL_ID}
     password: ${EMAIL_PASSWORD}
     properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+dapr:
+  app-id: notification-service

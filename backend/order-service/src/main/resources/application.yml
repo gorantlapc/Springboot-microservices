@@ -10,20 +10,12 @@ spring:
   application:
     name: order-service
 
-  # Kafka Configuration
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
-    listner:
-      auto-startup: false
-
 payment:
   service:
     url: ${PAYMENT_SERVICE_URL}
+
+dapr:
+  app-id: order-service
 
 resilience4j.circuitbreaker:
   instances:

@@ -25,12 +25,9 @@ public class OrderService {
 
     private final InventoryClient inventoryClient;
 
-    private final KafkaProducer kafkaProducer;
-
-    public OrderService(RestTemplate restTemplate, InventoryClient inventoryClient, KafkaProducer kafkaProducer) {
+    public OrderService(RestTemplate restTemplate, InventoryClient inventoryClient) {
         this.restTemplate = restTemplate;
         this.inventoryClient = inventoryClient;
-        this.kafkaProducer = kafkaProducer;
     }
 
     @CircuitBreaker(name = "myCircuitBreaker", fallbackMethod = "fallbackMethod")
@@ -49,13 +46,10 @@ public class OrderService {
                 String.class
         );
 
-        Message kafkaMessage = new Message(OrderStatus.ORDER_CREATED, order);
-        // Verify payment success from the response message and send message to Kafka only if successful
-        if (message != null && message.contains("Payment successful")) {
-            kafkaProducer.sendMessage("email-events", kafkaMessage);
-        }
-        log.debug(String.valueOf(kafkaMessage));
-        return kafkaMessage;
+        Message topicMessage = new Message(OrderStatus.ORDER_CREATED, order);
+
+        log.debug(String.valueOf(topicMessage));
+        return topicMessage;
     }
 
     public String fallbackMethod(Throwable throwable) {

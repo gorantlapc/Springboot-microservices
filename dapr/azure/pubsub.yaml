@@ -1,0 +1,10 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: my-pubsub   # <--- Spring Boot calls this name
+spec:
+  type: pubsub.azure.servicebus.topics
+  version: v1
+  metadata:
+    - name: namespaceName
+      value: "pctech.servicebus.windows.net"
