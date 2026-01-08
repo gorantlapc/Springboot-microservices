@@ -64,6 +64,30 @@ services:
     volumes:
       - "./dapr/local:/dapr/local:ro"
 
+  inventory-service-dapr:
+    image: "daprio/daprd:latest"
+    entrypoint: ["/daprd"]
+    command: [
+      "--app-id", "inventory-service",
+      "--app-port", "8088",
+      "--resources-path", "/dapr/local",
+      "--app-channel-address", "inventory-service"
+    ]
+    volumes:
+      - "./dapr/local:/dapr/local:ro"
+
+  payment-service-dapr:
+    image: "daprio/daprd:latest"
+    entrypoint: ["/daprd"]
+    command: [
+      "--app-id", "payment-service",
+      "--app-port", "8086",
+      "--resources-path", "/dapr/local",
+      "--app-channel-address", "payment-service"
+    ]
+    volumes:
+      - "./dapr/local:/dapr/local:ro"
+
   payment-service:
 #    build: ./backend/payment-service
     image: springbootmicroervices.azurecr.io/payment-service:latest

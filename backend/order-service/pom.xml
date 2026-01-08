@@ -29,12 +29,6 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
-        <!-- Feign client dependency for inter-service communication    -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
         <!-- Adding Dapr dependency        -->
         <dependency>
             <groupId>io.dapr.spring</groupId>

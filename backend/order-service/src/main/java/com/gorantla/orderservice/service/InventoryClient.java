@@ -1,13 +1,23 @@
 package com.gorantla.orderservice.service;
 
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import io.dapr.client.DaprClient;
+import io.dapr.client.domain.HttpExtension;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
-@FeignClient(name = "inventory-service", url = "${INVENTORY_SERVICE_URL}/api/inventory")
-public interface InventoryClient {
-    @GetMapping("/checkStock/{productCode}/{quantity}")
-    boolean isInStock(
-            @PathVariable("productCode") String productCode,
-            @PathVariable("quantity") Integer quantity);
+@Service
+public class InventoryClient {
+
+    private final DaprClient daprClient;
+
+    public InventoryClient(DaprClient daprClient) {
+        this.daprClient = daprClient;
+    }
+
+    public Mono<Boolean> isInStock(String productCode) {
+        // "inventory-service" is the Dapr app-id of the target microservice
+        // "/api/inventory/checkStock/" is the endpoint path in that microservice
+        return daprClient.invokeMethod("inventory-service", "/api/inventory/checkStock/" + productCode,
+                null, HttpExtension.GET, Boolean.class);
+    }
 }
