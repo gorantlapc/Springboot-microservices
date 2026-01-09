@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - deploy_to_azure
-      - dapr-sidecar
+      - dapr-integration
 
 # Enable GitHub OIDC for secure authentication to Azure
 permissions:
