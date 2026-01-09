@@ -3,7 +3,9 @@ name: Spring Boot Microservices CI/CD
 
 on:
   push:
-    branches: [ "deploy_to_azure" ]
+    branches:
+      - deploy_to_azure
+      - dapr-sidecar
 
 # Enable GitHub OIDC for secure authentication to Azure
 permissions:
