@@ -111,6 +111,6 @@ jobs:
             az containerapp update \
               --name $SERVICE \
               --resource-group ${{ vars.RESOURCE_GROUP }} \
-              --image $AZURE_CONTAINER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+              --image $AZURE_CONTAINER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
               --revision-suffix ${GITHUB_RUN_NUMBER}
           done
