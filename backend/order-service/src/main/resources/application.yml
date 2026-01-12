@@ -10,6 +10,11 @@ spring:
   application:
     name: order-service
 
+messaging:
+  pubsub:
+    name: ${PUBSUB_NAME}   # <--- Dapr pubsub component name
+    topic: ${TOPIC_NAME}   # <--- Topic name
+
 dapr:
   app-id: order-service
 
