@@ -14,7 +14,11 @@
 	<name>user-service</name>
 	<description>Demo project for Spring Boot</description>
 
-	<dependencies>
+    <properties>
+        <image.name>springbootmicroervices.azurecr.io/user-service:local</image.name>
+    </properties>
+
+    <dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -27,11 +31,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<image>
-						<name>springbootmicroervices.azurecr.io/user-service</name>
-					</image>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

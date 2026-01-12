@@ -14,6 +14,10 @@
 	<name>inventory-service</name>
 	<description>Demo project for Spring Boot</description>
 
+    <properties>
+        <image.name>springbootmicroervices.azurecr.io/inventory-service:local</image.name>
+    </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -26,11 +30,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<image>
-						<name>springbootmicroervices.azurecr.io/inventory-service</name>
-					</image>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -28,6 +28,8 @@
     <properties>
         <java.version>21</java.version>
         <spring.cloud.version>2025.0.0</spring.cloud.version> <!-- For Eureka, Gateway -->
+            <!-- Default image name (used locally / IDE) -->
+        <image.name>springbootmicroervices.azurecr.io/default:local</image.name>
     </properties>
 
     <dependencyManagement>
@@ -66,7 +68,8 @@
                     <configuration>
                         <image>
                             <builder>paketobuildpacks/builder-jammy-base </builder>
-<!--                            <cleanCache>true</cleanCache>-->
+<!--                          Pass image name as environment variable-->
+                            <name>${image.name}</name>
                         </image>
                     </configuration>
                 </plugin>

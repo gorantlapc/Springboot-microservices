@@ -7,7 +7,7 @@ services:
 
   api-gateway:
 #    build: ./backend/api-gateway
-    image: springbootmicroervices.azurecr.io/api-gateway:latest
+    image: springbootmicroervices.azurecr.io/api-gateway:local
     ports:
       - "8084:8084"
     environment:
@@ -18,7 +18,7 @@ services:
 
   user-service:
 #    build: ./backend/user-service
-    image: springbootmicroervices.azurecr.io/user-service:latest
+    image: springbootmicroervices.azurecr.io/user-service:local
     ports:
       - "8082:8082"
     depends_on:
@@ -26,7 +26,7 @@ services:
 
   order-service:
 #    build: ./backend/order-service
-    image: springbootmicroervices.azurecr.io/order-service:latest
+    image: springbootmicroervices.azurecr.io/order-service:local
     ports:
       - "8085:8085"
     depends_on:
@@ -37,6 +37,8 @@ services:
       DAPR_GRPC_ENDPOINT: http://order-service-dapr:50001
       DAPR_HTTP_ENDPOINT: http://order-service-dapr:3500
       LOG_LEVEL_ORDERSERVICE: DEBUG
+      PUBSUB_NAME: my-pubsub
+      TOPIC_NAME: alerts
 
     # 3. The Dapr Sidecar for your service
   order-service-dapr:
@@ -89,7 +91,7 @@ services:
 
   payment-service:
 #    build: ./backend/payment-service
-    image: springbootmicroervices.azurecr.io/payment-service:latest
+    image: springbootmicroervices.azurecr.io/payment-service:local
     ports:
       - "8086:8086"
     depends_on:
@@ -97,7 +99,7 @@ services:
 
   notification-service:
 #    build: ./backend/notification-service
-    image: springbootmicroervices.azurecr.io/notification-service:latest
+    image: springbootmicroervices.azurecr.io/notification-service:local
     ports:
       - "8087:8087"
     depends_on:
@@ -107,12 +109,14 @@ services:
     environment:
       DAPR_GRPC_ENDPOINT: http://order-service-dapr:50001
       DAPR_HTTP_ENDPOINT: http://order-service-dapr:3500
+      PUBSUB_NAME: my-pubsub
+      TOPIC_NAME: alerts
       EMAIL_ID: your_email_id_here
       EMAIL_PASSWORD: your_email_password_here # Create app-specific password for security reasons
 
   inventory-service:
 #    build: ./backend/inventory-service
-    image: springbootmicroervices.azurecr.io/inventory-service:latest
+    image: springbootmicroervices.azurecr.io/inventory-service:local
     ports:
       - "8088:8088"
     depends_on:

@@ -14,6 +14,10 @@
 	<name>notification-service</name>
 	<description>Demo project for Spring Boot</description>
 
+    <properties>
+        <image.name>springbootmicroervices.azurecr.io/notification-service:local</image.name>
+    </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -38,11 +42,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<image>
-						<name>springbootmicroervices.azurecr.io/notification-service</name>
-					</image>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
