@@ -13,5 +13,10 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
 
+messaging:
+  pubsub:
+    name: ${PUBSUB_NAME}   # <--- Dapr pubsub component name
+    topic: ${TOPIC_NAME}   # <--- Topic name
+
 dapr:
   app-id: notification-service
