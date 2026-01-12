@@ -74,14 +74,15 @@ jobs:
           SERVICES=("api-gateway" "user-service" "order-service" "payment-service" "notification-service" "inventory-service")
           CHANGED_FILES="${{ steps.detect_changes.outputs.changed_files }}"
           BUILD_ALL="${{ steps.detect_changes.outputs.build_all }}"
+          IMAGE_TAG="${{ github.sha }}"
           for SERVICE in "${SERVICES[@]}"; do
             if [ "$BUILD_ALL" = "false" ] && ! echo "$CHANGED_FILES" | grep -qE "^backend/$SERVICE/"; then
                 echo "No changes in $SERVICE, skipping build."
                 continue
             fi
             echo "Building and pushing $SERVICE..."
-            ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:latest
-            docker push $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+            ./mvnw clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dspring-boot.build-image.imageName=$AZURE_CONTAINER_REGISTRY/$SERVICE:$IMAGE_TAG
+            docker push $AZURE_CONTAINER_REGISTRY/$SERVICE:$IMAGE_TAG
           done
 
       - name: Verify Images in ACR
@@ -100,12 +101,18 @@ jobs:
           
           CHANGED_FILES="${{ steps.detect_changes.outputs.changed_files }}"
           BUILD_ALL="${{ steps.detect_changes.outputs.build_all }}"
+          IMAGE_TAG="${{ github.sha }}"
           
           for SERVICE in "${SERVICES[@]}"; do
+            IMAGE_NAME="${SERVICE%-app}"
             if [ "$BUILD_ALL" = "false" ] && ! echo "$CHANGED_FILES" | grep -qE "^backend/${SERVICE%-app}/"; then
                 echo "No changes in ${SERVICE%-app}, skipping deployment."
                 continue
             fi
-            echo "Deploying $SERVICE to Azure Container Apps..."
-            az containerapp update --name $SERVICE --resource-group ${{ vars.RESOURCE_GROUP }} --image $AZURE_CONTAINER_REGISTRY/$SERVICE:latest
+            echo "Deploying $SERVICE to Azure Container Apps with image $IMAGE_NAME:$IMAGE_TAG"
+            az containerapp update \
+              --name $SERVICE \
+              --resource-group ${{ vars.RESOURCE_GROUP }} \
+              --image $AZURE_CONTAINER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+              --revision-suffix ${GITHUB_RUN_NUMBER}
           done
