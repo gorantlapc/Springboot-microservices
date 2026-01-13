@@ -1,10 +1,15 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: my-pubsub   # <--- Spring Boot calls this name
+  name: pubsub_servicebus   # <--- Spring Boot calls this name
 spec:
   type: pubsub.azure.servicebus.topics
   version: v1
   metadata:
     - name: namespaceName
       value: "pctech.servicebus.windows.net"
+    - name: authType
+      value: "managedIdentity"
+  scopes:
+    - order-service
+    - notification-service
