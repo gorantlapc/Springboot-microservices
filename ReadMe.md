@@ -18,7 +18,15 @@ The microservices architecture consists of the following components:
 
 Each service is designed to be independently deployable and scalable. The services communicate with each other using RESTful APIs and Asynchronous Messaging (Kafka), and the API Gateway handles routing and load balancing. The Eureka Server enables service discovery, allowing services to find and communicate with each other dynamically.
 
-Communication Flow
+Git branches
+================================
+- `local-docker-deployment`: This branch is configured for local deployment using Docker and Docker Compose with Kafka for asynchronous messaging.
+- `dapr-integration`: This branch is configured for deployment to Azure using a CI/CD pipeline with GitHub Actions and utilizes Dapr for asynchronous messaging via Azure Service Bus.
+- `update-docs`: This branch is used for updating documentation and does not contain any code changes.
+- `dev` : This branch is used for active development and may contain experimental features or changes. dapr-integration branch is created from dev branch.
+- `main`: This is the default branch and may contain stable code or be used for other purposes.
+
+Communication Flow for local-docker-deployment branch with Kafka
 --------------------------------
 1. A client sends a request to the API Gateway.
 2. The API Gateway routes the request to the appropriate microservice (e.g., User Service).
@@ -26,6 +34,13 @@ Communication Flow
 4. The microservices may use Kafka for asynchronous communication, such as sending notifications.
 5. The response is sent back through the API Gateway to the client.
 
+Communication flow for dapr-integration branch with Azure Service Bus via Dapr
+--------------------------------
+1. A client sends a request to the API Gateway.
+2. The API Gateway routes the request to the appropriate microservice (e.g., User Service).
+3. The microservice processes the request, which may involve communicating with other microservices using Dapr HTTP APIs.
+4. The microservices use Dapr sidecar to publish messages to Azure Service Bus for asynchronous communication, such as sending notifications.
+5. The response is sent back through the API Gateway to the client.
 
 ### Technologies Used
 - Java 21
@@ -35,10 +50,11 @@ Communication Flow
 - Resilience4j (Circuit Breaker)
 - Maven
 - Docker
+- Docker Compose
 - Kafka
 - Buildpacks for Docker image creation
 - GitHub Actions (CI/CD)
-- Azure (Container Apps, Container Registry, Federated Identity)
+- Azure (CLI, Container Apps, Container Registry, Federated Identity, Service Bus via Dapr)
 
   Project Setup Instructions
   ================================
@@ -71,9 +87,10 @@ Example: `http://localhost:8084/order/process` and pass order details through re
   "price": 2000
 }
 ```
-Run using CI/CD Pipeline
+Run using CI/CD Pipeline and Deploy to Azure
 --------------------------------
 1. **Azure Setup**: Ensure you have an Azure account with Azure Container Registry and Azure Container Apps set up and Azure Federated Identity configured.
+   Enable Dapr in Azure Container Apps for asynchronous messaging using Azure Service Bus. Configure Dapr components accordingly.
    Run the script `./scripts/setup-azure-resources.sh` to create the required Azure resources.
 2. **Configure Secrets**: Add the necessary secrets to your GitHub repository for Azure authentication and other configurations.
 3. **Set ENV Variables**: set environment variables in github repository settings as below
@@ -84,19 +101,23 @@ Run using CI/CD Pipeline
     - AZURE_RESOURCE_GROUP: your-azure-resource-group-name
     - AZURE_SUBSCRIPTION_ID: your-azure-subscription-id
 4. ``` bash
-      git checkout deploy_to_azure
+      git checkout dapr-integration
     ```
 5. **Push to GitHub**: Push your code changes to the GitHub repository.
 6. **GitHub Actions**: The CI/CD pipeline defined in `.github/workflows/main.yml` will automatically build image and push images to Azure Container Registry.
 7. **Deployment**: The pipeline will deploy the microservices to Azure Container Apps.
 
-**To Do**: When it comes to Cloud deployment, we need to fix Kafka setup in Azure Or use equivalent azure alternative.
+[//]: # (**To Do**: When it comes to Cloud deployment, we need to fix Kafka setup in Azure Or use equivalent azure alternative.)
+
+Note: Implementation of asynchonous messging is done using Azure Service Bus via Dapr(Distributed Application Runtime) integration in dapr-integration branch.
 
 Problems and solutions
 ====================
-Problem 1: Circuit breaker not invoked when downstream service is down or throws error
-Root Cause: Missed to add spring aop dependency which requires by Resilience4j
-Solution: Add the following dependency to pom.xml
+**Problem 1**: Circuit breaker not invoked when downstream service is down or throws error
+
+**Root Cause**: Missed to add spring aop dependency which requires by Resilience4j
+
+**Solution**: Add the following dependency to pom.xml
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -104,9 +125,11 @@ Solution: Add the following dependency to pom.xml
 </dependency>
 ```
 
-Problem 2: Can't convert value of class com.gorantla.orderservice.data.Message to class org.apache.kafka.common.serialization.StringSerializer specified in value.serializer
-Root Cause: Incorrect Kafka producer configuration. it should be spring.kafka.producer.value-serializer. it was given as kafka.producer.value-serializer
-Solution: Update the application.yml correctly as below
+**Problem 2**: Can't convert value of class com.gorantla.orderservice.data.Message to class org.apache.kafka.common.serialization.StringSerializer specified in value.serializer
+
+**Root Cause**: Incorrect Kafka producer configuration. it should be spring.kafka.producer.value-serializer. it was given as kafka.producer.value-serializer
+
+**Solution**: Update the application.yml correctly as below
 ```yaml
 spring:
   kafka:
@@ -115,9 +138,11 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.JsonSerializer
 ```
 
-Problem 3: org.springframework.beans.TypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'java.lang.Class'; Could not find class [org.apache.kafka.common.serialization.JsonSerializer]
-Roor Cause: Standard Apache Kafka only provides serializers for simple types (String, Integer, Bytes). The JsonSerializer is a Spring-specific utility.
-Solution: Update the application.yml to use Spring Kafka's JsonSerializer as below
+**Problem 3**: org.springframework.beans.TypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'java.lang.Class'; Could not find class [org.apache.kafka.common.serialization.JsonSerializer]
+
+**Roor Cause**: Standard Apache Kafka only provides serializers for simple types (String, Integer, Bytes). The JsonSerializer is a Spring-specific utility.
+
+**Solution**: Update the application.yml to use Spring Kafka's JsonSerializer as below
 ```yaml
 spring:
   kafka:
@@ -126,10 +151,12 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 ```
  
-Problem 4: Get error while run github action.
+**Problem 4**: Get error while run github action.
 Run ./mvnw -B clean package -DskipTests --file pom.xml /home/runner/work/_temp/bb652d7d-9c6b-43e7-92c3-3023fc363d1c.sh: line 1: ./mvnw: Permission denied.
-Root Cause: The Maven Wrapper script (mvnw) does not have execute permissions for Github runner(Linux).
-Solution: Run the following command to give execute permission to mvnw and commit the changes.
+
+**Root Cause**: The Maven Wrapper script (mvnw) does not have execute permissions for Github runner(Linux).
+
+**Solution**: Run the following command to give execute permission to mvnw and commit the changes.
 ```bash
 chmod +x mvnw
 git add mvnw
@@ -143,3 +170,45 @@ Or add the following step in github action before executing mvnw command.
 ```yaml
 - name: Give execute permission to mvnw
   run: chmod +x mvnw
+```
+
+**Problem 5**: io.netty.resolver.dns.DnsResolveContext$SearchDomainUnknownHostException: Failed to resolve 'order-service-app.internal' [A(1)] and search domain query for configured domains failed as well: [k8se-apps.svc.cluster.local, svc.cluster.local, cluster.local]
+
+**Root Cause**: The error errors when the api-gateway-app is trying to reach the order-service-app. This error occurs because Netty (the underlying networking library for Spring WebFlux/Project Reactor) uses its own Java-based DNS resolver which often conflicts with how Azure Container Apps (ACA) handles internal service discovery.
+
+**Solution**: To resolve this issue, you need to configure Netty to use the system DNS resolver instead of its default Java-based resolver. 
+
+Set the environment variables as below
+JAVA_TOOL_OPTIONS="-Dnetty.dns.resolver.type=native" and URL should be like http://order-service-app without port number.
+
+This change forces Netty to use the system's DNS resolver, which is compatible with ACA's internal DNS resolution mechanism. After making this change, restart the Azure Container App (api-gateway-app), and the DNS resolution issues should be resolved. 
+
+**Problem 6**: Dapr sidecar is not starting in Azure Container Apps
+
+**Root Cause**: Missing Dapr configuration in Azure Container App.
+
+**Solution**: Enable Dapr in Azure Container App using Azure CLI as below
+Pass the following attributes to the command az containerapp create or az containerapp update
+```bash
+--enable-dapr true
+--dapr-app-id notification-service
+--dapr-app-port 8087
+--dapr-app-protocol http
+```
+Or run the following command to enable Dapr in existing container app
+```bash
+$ az containerapp dapr enable --name notification-service-app --resource-group springboot-rg --dapr-app-id notification-service --dapr-app-port 8087 --dapr-app-protocol http
+``` 
+
+**Problem 7**: Image name and tag is not set to container app during deployment from ACR when updating container app using github action.
+Root Cause: Using latest tag in container app deployment step in github action.
+Solution: Use specific image tag instead of latest in container app deployment step in github action as below
+use the following format
+```yaml
+image: ${{AZURE_CONTAINER_REGISTRY_NAME}}/notification-service:${{ github.sha }}
+```
+but still image is built with latest tag because of buildpack default behavior based configuration done in pom.xml.
+To fix that we need to explicitly set the tag during image build step as below
+```yaml
+./mvnw clean spring-boot:build-image -Dimage.name=${{ AZURE_CONTAINER_REGISTRY_NAME }}/notification-service:${{ github.sha }} -pl notification-service
+``` 
