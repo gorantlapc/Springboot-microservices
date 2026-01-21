@@ -11,50 +11,29 @@ spring:
       enabled: false
   cloud:
     gateway:
-#      globalcors:
-#        corsConfigurations:
-#          '[/**]':
-#            allowedOrigins: "http://localhost:3000"
-#            allowedMethods:
-#              - GET
-#              - POST
-#              - PUT
-#              - DELETE
-#              - OPTIONS
-#            allowedHeaders: "*"
-#            allowCredentials: true
-      routes:
-        - id: user-service
-          uri: ${USER_SERVICE_URL}
-          predicates:
-            - Path=/api/users/**
-        - id: order-service
-          uri: ${ORDER_SERVICE_URL}
-          predicates:
-            - Path=/api/order/**
-        - id: payment-service
-          uri: ${PAYMENT_SERVICE_URL}
-          predicates:
-            - Path=/api/payment/**
-        - id: inventory-service
-          uri: ${INVENTORY_SERVICE_URL}
-          predicates:
-            - Path=/api/inventory/**
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-    instance:
-      lease-renewal-interval-in-seconds: 5
-      preferIpAddress: true
-    register-with-eureka: true  # Ensure it's set to true
-    fetch-registry: true  # Allow service discovery
+      server:
+        webflux:
+          routes:
+            - id: user-service
+              uri: ${USER_SERVICE_URL}
+              predicates:
+                - Path=/api/users/**
+            - id: order-service
+              uri: ${ORDER_SERVICE_URL}
+              predicates:
+                - Path=/api/order/**
+            - id: payment-service
+              uri: ${PAYMENT_SERVICE_URL}
+              predicates:
+                - Path=/api/payment/**
+            - id: inventory-service
+              uri: ${INVENTORY_SERVICE_URL}
+              predicates:
+                - Path=/api/inventory/**
 
 logging:
   level:
-    com.netflix.eureka: DEBUG
-    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway: ${LOG_LEVEL_GATEWAY:=INFO}
 
 management:
   endpoints:

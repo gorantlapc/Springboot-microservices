@@ -17,7 +17,6 @@
     </parent>
 
     <modules>
-        <module>backend/service-registry</module>
         <module>backend/api-gateway</module>
         <module>backend/user-service</module>
         <module>backend/order-service</module>

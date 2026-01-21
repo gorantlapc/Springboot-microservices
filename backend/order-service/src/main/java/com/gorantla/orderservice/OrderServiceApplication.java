@@ -12,11 +12,9 @@ import org.springframework.web.client.RestTemplate;
 public class OrderServiceApplication {
 
 	@Bean
-	@LoadBalanced  // Important if calling services registered in Eureka
 	public RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
-
 
 	public static void main(String[] args) {
 		SpringApplication.run(OrderServiceApplication.class, args);

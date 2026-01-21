@@ -5,14 +5,4 @@ spring:
   application:
     name: user-service
 
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-  instance:
-    lease-renewal-interval-in-seconds: 5
-    preferIpAddress: true
-  register-with-eureka: true  # Ensure it's set to true
-  fetch-registry: true  # Allow service discovery
-
 debug: true

@@ -9,11 +9,6 @@ server:
 spring:
   application:
     name: order-service
-  devtools:
-    restart:
-      enabled: true
-    livereload:
-      enabled: true
 
   # Kafka Configuration
   kafka:
@@ -29,17 +24,6 @@ spring:
 payment:
   service:
     url: ${PAYMENT_SERVICE_URL}
-
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-  instance:
-    lease-renewal-interval-in-seconds: 5
-    preferIpAddress: true
-  register-with-eureka: true  # Ensure it's set to true
-
-  fetch-registry: true  # Allow service discovery
 
 debug: true
 
