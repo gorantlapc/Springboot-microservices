@@ -14,6 +14,10 @@
 	<name>api-gateway</name>
 	<description>API-gateway service</description>
 
+    <properties>
+        <image.name>593793049094.dkr.ecr.eu-north-1.amazonaws.com/dev-api-gateway:latest</image.name>
+    </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
@@ -32,11 +36,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<image>
-						<name>springbootmicroervices.azurecr.io/api-gateway</name>
-					</image>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

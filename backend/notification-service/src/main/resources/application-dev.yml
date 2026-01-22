@@ -1,0 +1,4 @@
+spring:
+  cloud:
+    aws:
+      endpoint: ${LOCALSTACK_ENDPOINT:http://localhost:4566}

@@ -1,32 +1,25 @@
 server:
   port: 8085
-  error:
-    include-message: always
-    include-binding-errors: always
-    whitelabel:
-      enabled: false
 
 spring:
   application:
     name: order-service
 
-  # Kafka Configuration
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
-    listner:
-      auto-startup: false
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION}
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+sns:
+  topic:
+    arn: ${AWS_SNS_TOPIC_ARN}
 
 payment:
   service:
     url: ${PAYMENT_SERVICE_URL}
-
-debug: true
-
 
 resilience4j.circuitbreaker:
   instances:

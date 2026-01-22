@@ -1,16 +1,19 @@
 package com.gorantla.notificationservice.service;
 
 import com.gorantla.notificationservice.data.Message;
+import io.awspring.cloud.sqs.annotation.SqsListener;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+
 @Service
 public class EmailService {
+    private static final Logger logger = org.slf4j.LoggerFactory.getLogger(EmailService.class);
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -21,9 +24,9 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    @KafkaListener(topics = "email-events", groupId = "notification-service")
+    @SqsListener(value = "${sqs.queue.name}")
     public void listenForEmailEvents(Message message) {
-        // Logic to process email events from Kafka
+        // Logic to process email events from aws sqs
         switch (message.orderStatus()) {
             case ORDER_CREATED -> sendEmail(message.orderRequest().userEmail(),
                     "Order Notification",
@@ -58,7 +61,7 @@ public class EmailService {
             helper.setFrom(fromEmail);
             mailSender.send(mimeMailMessage);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error( "Failed to send HTML email to {}", to, e);
         }
     }
 }

@@ -14,6 +14,10 @@
 	<name>order-service</name>
 	<description>Order Microservice</description>
 
+    <properties>
+        <image.name>593793049094.dkr.ecr.eu-north-1.amazonaws.com/dev-order-service:latest</image.name>
+    </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -42,15 +46,15 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
-        </dependency>
-
         <!-- Feign client dependency for inter-service communication    -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.awspring.cloud</groupId>
+            <artifactId>spring-cloud-aws-starter-sns</artifactId>
         </dependency>
 
 	</dependencies>
@@ -60,11 +64,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<image>
-						<name>springbootmicroervices.azurecr.io/order-service</name>
-					</image>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
