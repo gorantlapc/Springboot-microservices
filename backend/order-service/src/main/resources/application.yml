@@ -8,10 +8,7 @@ spring:
   cloud:
     aws:
       region:
-        static: ${AWS_REGION}
-      credentials:
-        access-key: ${AWS_ACCESS_KEY_ID}
-        secret-key: ${AWS_SECRET_ACCESS_KEY}
+        static: ${AWS_REGION:eu-north-1}
 
 sns:
   topic:
@@ -39,3 +36,9 @@ logging:
     io.github.resilience4j.circuitbreaker: DEBUG
     io.github.resilience4j.spring6.circuitbreaker: DEBUG
     org.springframework.aop: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

@@ -5,4 +5,8 @@ spring:
   application:
     name: payment-service
 
-debug: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

@@ -1,4 +1,7 @@
 spring:
   cloud:
     aws:
+      credentials:
+        access-key: test
+        secret-key: test
       endpoint: ${LOCALSTACK_ENDPOINT:http://localhost:4566}

@@ -5,4 +5,8 @@ spring:
   application:
     name: inventory-service
 
-debug: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

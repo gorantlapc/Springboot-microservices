@@ -8,10 +8,10 @@ spring:
   cloud:
     aws:
       region:
-        static: ${AWS_REGION}
-      credentials:
-        access-key: ${AWS_ACCESS_KEY}
-        secret-key: ${AWS_SECRET_KEY}
+        static: ${AWS_REGION:eu-north-1}
+    sqs:
+      queue:
+        auto-create: false
 
   mail:
     host: smtp.gmail.com
@@ -29,4 +29,8 @@ sqs:
   queue:
     name: ${AWS_SQS_QUEUE_NAME}
 
-debug: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
