@@ -13,17 +13,9 @@ spring:
       queue:
         auto-create: false
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${EMAIL_ID}
-    password: ${EMAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+ses:
+  from:
+    address: ${SES_FROM_ADDRESS}
 
 sqs:
   queue:

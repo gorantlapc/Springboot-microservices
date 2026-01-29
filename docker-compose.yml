@@ -8,7 +8,8 @@ services:
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
     environment:
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
-      - SERVICES=sns,sqs
+      - SERVICES=sns,sqs,ses
+      - SES_DISABLE_SANDBOX=true
       - DEFAULT_REGION=us-east-1
       - DEBUG=${DEBUG:-0}
     volumes:
@@ -27,7 +28,6 @@ services:
       INVENTORY_SERVICE_URL: http://inventory-service:8088
 #      LOG_LEVEL_GATEWAY: DEBUG
 
-
   user-service:
 #    build: ./backend/user-service
     image: 593793049094.dkr.ecr.eu-north-1.amazonaws.com/dev-user-service:latest
@@ -41,20 +41,22 @@ services:
     image: 593793049094.dkr.ecr.eu-north-1.amazonaws.com/dev-order-service:latest
     ports:
       - "8085:8085"
+    mem_limit: 2G
     depends_on:
       - api-gateway
       - localstack
       - payment-service
       - inventory-service
     environment:
+      BPL_JVM_THREAD_COUNT: 50
+      BPL_JVM_HEAD_ROOM: 10
       SPRING_PROFILES_ACTIVE: dev
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
       AWS_REGION: us-east-1
       LOCALSTACK_ENDPOINT: http://localstack:4566
       AWS_SNS_TOPIC_ARN: arn:aws:sns:us-east-1:000000000000:order-topic
       PAYMENT_SERVICE_URL: http://payment-service:8086
       INVENTORY_SERVICE_URL: http://inventory-service:8088
+      JAVA_TOOL_OPTIONS: "-Xmx640m -Xms256m -XX:MaxMetaspaceSize=128M -XX:MaxDirectMemorySize=128M -XX:ReservedCodeCacheSize=128M -XX:+PrintCodeCache"
 
   payment-service:
 #    build: ./backend/payment-service
@@ -74,12 +76,9 @@ services:
       - localstack
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
       AWS_REGION: us-east-1
       AWS_SQS_QUEUE_NAME: notification-queue
-      EMAIL_ID: your_email_id_here
-      EMAIL_PASSWORD: your_email_password_here # Create app-specific password for security reasons
+      SES_FROM_ADDRESS: "gorantla.gpc@gmail.com"
       LOCALSTACK_ENDPOINT: http://localstack:4566
 
 

@@ -26,13 +26,6 @@ variable "services" {
   default = []
 }
 
-# Use a sensitive variable for any secret that otherwise was hardcoded
-variable "notification_email_password" {
-  type        = string
-  sensitive   = true
-  default     = " "
-}
-
 // New variable: region for building service_name for VPC endpoints (avoids deprecated data attribute)
 variable "region" {
   description = "AWS region where resources will be created"

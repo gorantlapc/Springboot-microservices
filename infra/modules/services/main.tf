@@ -345,8 +345,7 @@ resource "aws_ecs_task_definition" "app" {
         } : {},
         each.key == "notification-service" ? {
             AWS_SQS_QUEUE_NAME = aws_sqs_queue.events_queue.name,
-            EMAIL_ID = "gorantla.gpc@gmail.com",
-            EMAIL_PASSWORD = var.notification_email_password
+            SES_FROM_ADDRESS = "gorantla.gpc@gmail.com"
         } : {}
       ) : { name = k, value = v }]
 
@@ -629,7 +628,27 @@ resource "aws_iam_role_policy" "ecs_task_role_policy" {
           "sqs:GetQueueUrl"
         ],
         Resource = aws_sqs_queue.events_queue.arn
+      },
+      # Allow SES send email actions
+      {
+        Sid = "AllowSendEmail",
+        Effect = "Allow",
+        Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ],
+        Resource = "*",
       }
     ]
   })
+}
+
+# VPC interface endpoint for SES (so tasks can send emails via SES from private subnets)
+resource aws_vpc_endpoint "ses" {
+  vpc_id            = module.capp_vpc.vpc_id
+  service_name      = "com.amazonaws.${var.region}.email"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = module.capp_vpc.private_subnets
+  security_group_ids = [aws_security_group.vpce_sg.id]
+  private_dns_enabled = true
 }
