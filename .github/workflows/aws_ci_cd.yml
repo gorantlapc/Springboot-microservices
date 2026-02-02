@@ -36,8 +36,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION || 'eu-north-1' }}
 
       - name: Build ${{ matrix.service }}
-        run: mvn -B -pl backend/${{ matrix.service }} -am clean spring-boot:build-image -DskipTests \
-              -Dimage.name=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:latest
+        run: mvn clean spring-boot:build-image -DskipTests -pl backend/$SERVICE -Dimage.name=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:latest
 
       - name: Log in to ECR
         run: |
