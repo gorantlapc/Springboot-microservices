@@ -37,7 +37,7 @@ jobs:
 
       - name: Build ${{ matrix.service }}
         run: mvn -B -pl backend/${{ matrix.service }} -am clean spring-boot:build-image -DskipTests \
-              -Dspring-boot.build-image.imageName=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:latest
+              -Dimage.name=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:latest
 
       - name: Log in to ECR
         run: |
