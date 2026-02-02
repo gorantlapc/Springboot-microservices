@@ -3,7 +3,12 @@ name: Spring Boot Microservices CI/CD
 
 on:
   push:
-    branches: [ "deploy_to_aws" ]
+    branches:
+      - deploy_to_aws
+    paths:
+      - backend/**
+      - .github/workflows/aws_ci_cd.yml
+      - pom.xml
 
 jobs:
   build-and-deploy:
