@@ -50,9 +50,16 @@ public class OrderService {
         );
 
         Message snsMessage = new Message(OrderStatus.ORDER_CREATED, order);
-        // Verify payment success from the response message and send message to Kafka only if successful
+        // Verify payment success from the response message and send message to SNS only if successful
         if (message != null && message.contains("Payment successful")) {
-            snsTemplate.convertAndSend(topicArn, snsMessage);
+            if (topicArn == null || topicArn.isBlank()) {
+                throw new IllegalStateException("SNS topic ARN is not configured: AWS_SNS_TOPIC_ARN must be provided");
+            }
+            try {
+                snsTemplate.convertAndSend(topicArn, snsMessage);
+            } catch (Exception ex) {
+                throw new RuntimeException("Failed to publish message to SNS topic " + topicArn, ex);
+            }
         } else {
             throw new IllegalStateException("Payment failed for order: " + order.orderId());
         }
