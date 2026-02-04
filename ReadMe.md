@@ -1,14 +1,15 @@
-Spring Boot Microservices Demo Project
-================================
-This project showcases a microservices architecture built using Java 21 and Spring Boot. It includes multiple microservices that communicate with each other through RESTful APIs and asynchronous messaging using Kafka. The architecture also incorporates an API Gateway for routing and a Eureka Server for service discovery.
+# SpringBoot Microservices Azure/AWS Cloud Deployment Demo Project
 
-Note : This project is intended for educational purposes. Microservices include basic implementations to demonstrate inter-service communication, resilience patterns, and deployment strategies.
+This project showcases a microservices architecture built using Java 21, Spring Boot and deploy to Azure Container Apps or AWS ECS. 
+It includes multiple microservices that communicate with each other through RESTful APIs, Feign Client and asynchronous messaging using Kafka / Azure ServiceBus / Amazon SNS/SQS.
 
-High-level Architecture
-================================
+> Note: This project is intended for educational purposes. Microservices include basic implementations to demonstrate inter-service communication, resilience patterns, and deployment strategies.
+
+## High-level architecture
+
 The microservices architecture consists of the following components:
 
-1. **Eureka Server**: Acts as a service registry for service discovery(Applicable to only local docker deployment).
+1. **Eureka Server**: Acts as a service registry for service discovery (applicable to only local Docker deployment).
 2. **API Gateway**: Routes requests to appropriate microservices and provides a single entry point.
 3. **User Service**: Manages user-related operations and data.
 4. **Order Service**: Manages order-related operations and communicates with other services.
@@ -16,18 +17,47 @@ The microservices architecture consists of the following components:
 6. **Notification Service**: Sends notifications to users via email or SMS.
 7. **Inventory Service**: Manages product inventory and stock levels.
 
-Each service is designed to be independently deployable and scalable. The services communicate with each other using RESTful APIs and Asynchronous Messaging (Kafka), and the API Gateway handles routing and load balancing. The Eureka Server enables service discovery, allowing services to find and communicate with each other dynamically.
+Each service is designed to be independently deployable and scalable. The services communicate with each other using RESTful APIs and asynchronous messaging (Kafka/Azure ServiceBus/AWS SNS/SQS). The API Gateway handles routing and load balancing. The Eureka Server enables service discovery, allowing services to find and communicate with each other dynamically.
 
-Communication Flow
---------------------------------
+## Request flows    
+
+### Local (docker-compose + Kafka)
+
 1. A client sends a request to the API Gateway.
 2. The API Gateway routes the request to the appropriate microservice (e.g., User Service).
 3. The microservice processes the request, which may involve communicating with other microservices using REST APIs or Feign Client.
 4. The microservices may use Kafka for asynchronous communication, such as sending notifications.
 5. The response is sent back through the API Gateway to the client.
 
+### Azure Container Apps with Dapr integration (Azure Service Bus via Dapr)
 
-### Technologies Used
+1. A client sends a request to the API Gateway.
+2. The API Gateway routes the request to the appropriate microservice (e.g., User Service).
+3. The microservice processes the request, which may involve communicating with other microservices using Dapr HTTP APIs.
+4. The microservices use the Dapr sidecar to publish messages to Azure Service Bus for asynchronous communication, such as sending notifications.
+5. The response is sent back through the API Gateway to the client.
+
+###  AWS deployment to ECS (SNS, SQS, SES)
+
+1. A client sends a request to the API Gateway via Public ALB(Application Load Balancer).
+2. The API Gateway routes the request to the appropriate microservice through Private ALB.
+3. The microservice processes the request, which may involve communicating with other microservices using REST APIs/Feign Client.
+4. The response is sent back through the API Gateway to the client.
+5. The microservices use AWS SNS and SQS for asynchronous communication, such as sending notifications.
+   For example; Order Service publishes order events to an SNS topic. SNS then delivers these messages to subscribed SQS queues, SqsListener in Notification Service polls the SQS queue to process and send notifications.
+   For email notifications, AWS SES is used to send emails to users.
+
+## Git branches
+
+- `local-docker-deployment`: This branch is configured for local deployment using Docker and Docker Compose with Kafka for asynchronous messaging.
+- `dapr-integration`: This branch is configured for deployment to Azure using a CI/CD pipeline with GitHub Actions and utilizes Dapr for asynchronous messaging via Azure Service Bus.
+- `update-docs`: This branch is used for updating documentation and does not contain any code changes.
+- `dev`: This branch is used for active development and may contain experimental features or changes.
+- `main`: This is the default branch and may contain stable code or be used for other purposes.
+- `deploy_to_aws`: This branch is configured for deployment to AWS using a CI/CD pipeline with GitHub Actions.
+
+## Technologies used
+
 - Java 21
 - Spring Boot
 - Spring Cloud Netflix Eureka (Service Discovery)
@@ -35,111 +65,207 @@ Communication Flow
 - Resilience4j (Circuit Breaker)
 - Maven
 - Docker
+- Docker Compose
 - Kafka
 - Buildpacks for Docker image creation
 - GitHub Actions (CI/CD)
-- Azure (Container Apps, Container Registry, Federated Identity)
+- Azure (CLI, Container Apps, Container Registry, Federated Identity, Service Bus via Dapr)
+- AWS (ECS, ECR, IAM, SNS, SQS, SES, VPC, ALB) (in `deploy_to_aws` branch)
+- Terraform (in `deploy_to_aws` branch)
 
-  Project Setup Instructions
-  ================================
+## Project setup instructions
 
-**Note**: the project can be run locally using Docker or deployed to Azure using a CI/CD pipeline configured with GitHub Actions.
+> Note: The project can be run locally using Docker or deployed to Azure using a CI/CD pipeline configured with GitHub Actions.
 
-1. **Clone the Repository**: Clone the project repository to your local machine.
+### Clone the repository
+
 ```bash
 git clone https://github.com/gorantlapc/Springboot-microservices.git
 ```
-Run locally using Docker
---------------------------------
-1. ``` bash
-   git checkout local-docker-deployment
+
+### Run locally using Docker
+
+1. Switch to the branch for local deployment:
+
+    ```bash
+    git checkout local-docker-deployment
     ```
-2. **Install Docker**: Ensure Docker Desktop is installed and running on your machine.
-3. **Build the Project**: Navigate to the project directory.
-   1. **Build All services**: Run `./mvnw clean spring-boot:build-image` to build the project and create Docker images for each microservice.
-   2. **Build Single Service**: Run `./mvnw clean spring-boot:build-image -pl <module-name>` to build a specific microservice module. Replace `<module-name>` with the desired module name (e.g., `order-service`).
-4. **Run Services**: Run the command `docker-compose up -d` to start all the microservices along with Kafka.
-5. **Access the Services**: Use Postman or any API testing tool to interact with the microservices through the API Gateway.
 
-Example: `http://localhost:8084/order/process` and pass order details through request body as below to access the User Service.
-```json
-{
-  "orderId": "12536",
-  "userEmail": "pcatgothenburg@gmail.com",
-  "productCode": "2000",
-  "quantity": 4,
-  "price": 2000
-}
-```
-Run using CI/CD Pipeline
---------------------------------
-1. **Azure Setup**: Ensure you have an Azure account with Azure Container Registry and Azure Container Apps set up and Azure Federated Identity configured.
-   Run the script `./scripts/setup-azure-resources.sh` to create the required Azure resources.
-2. **Configure Secrets**: Add the necessary secrets to your GitHub repository for Azure authentication and other configurations.
-3. **Set ENV Variables**: set environment variables in github repository settings as below
-    - AZURE_CLIENT_ID: your-azure-client-id
-    - AZURE_CONTAINER_REGISTRY: your-azure-container-registry-name
-    - AZURE_CONTAINER_REGISTRY_NAME : your-azure-container-registry-login-server-name
-    - AZURE_TENANT_ID: your-azure-tenant-id
-    - AZURE_RESOURCE_GROUP: your-azure-resource-group-name
-    - AZURE_SUBSCRIPTION_ID: your-azure-subscription-id
-4. ``` bash
-      git checkout deploy_to_azure
+2. Install Docker Desktop and ensure it is running.
+
+3. Build the project (from repository root):
+
+- Build all services and create Docker images:
+
+    ```bash
+    ./mvnw clean spring-boot:build-image
     ```
-5. **Push to GitHub**: Push your code changes to the GitHub repository.
-6. **GitHub Actions**: The CI/CD pipeline defined in `.github/workflows/main.yml` will automatically build image and push images to Azure Container Registry.
-7. **Deployment**: The pipeline will deploy the microservices to Azure Container Apps.
 
-**To Do**: When it comes to Cloud deployment, we need to fix Kafka setup in Azure Or use equivalent azure alternative.
+- Build a single service (replace <module-name> with e.g. `order-service`):
 
-Problems and solutions
-====================
-Problem 1: Circuit breaker not invoked when downstream service is down or throws error
-Root Cause: Missed to add spring aop dependency which requires by Resilience4j
-Solution: Add the following dependency to pom.xml
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-aop</artifactId>
-</dependency>
-```
+    ```bash
+    ./mvnw clean spring-boot:build-image -pl <module-name>
+    ```
 
-Problem 2: Can't convert value of class com.gorantla.orderservice.data.Message to class org.apache.kafka.common.serialization.StringSerializer specified in value.serializer
-Root Cause: Incorrect Kafka producer configuration. it should be spring.kafka.producer.value-serializer. it was given as kafka.producer.value-serializer
-Solution: Update the application.yml correctly as below
-```yaml
-spring:
-  kafka:
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.JsonSerializer
-```
+4. Start services using Docker Compose:
 
-Problem 3: org.springframework.beans.TypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'java.lang.Class'; Could not find class [org.apache.kafka.common.serialization.JsonSerializer]
-Roor Cause: Standard Apache Kafka only provides serializers for simple types (String, Integer, Bytes). The JsonSerializer is a Spring-specific utility.
-Solution: Update the application.yml to use Spring Kafka's JsonSerializer as below
-```yaml
-spring:
-  kafka:
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-```
- 
-Problem 4: Get error while run github action.
-Run ./mvnw -B clean package -DskipTests --file pom.xml /home/runner/work/_temp/bb652d7d-9c6b-43e7-92c3-3023fc363d1c.sh: line 1: ./mvnw: Permission denied.
-Root Cause: The Maven Wrapper script (mvnw) does not have execute permissions for Github runner(Linux).
-Solution: Run the following command to give execute permission to mvnw and commit the changes.
+    ```bash
+    docker compose up -d
+    ```
+
+5. Access the services through the API Gateway (example):
+
+    POST http://localhost:8084/order/process
+
+    Request body example:
+
+    ```json
+    {
+      "orderId": "12536",
+      "userEmail": "pcatgothenburg@gmail.com",
+      "productCode": "2000",
+      "quantity": 4,
+      "price": 2000
+    }
+    ```
+
+### Run using CI/CD pipeline and deploy to Azure
+
+1. Azure setup: Ensure you have an Azure account with an Azure Container Registry and Azure Container Apps set up. Configure Azure Federated Identity as required.
+
+2. Enable Dapr in Azure Container Apps (if using Dapr) and configure Dapr components for Service Bus.
+
+3. Run the setup script to create required Azure resources (if provided):
+
+    ```bash
+    ./scripts/setup-azure-resources.sh
+    ```
+
+4. Configure repository secrets and environment variables in GitHub (examples):
+
+  - AZURE_CLIENT_ID
+  - AZURE_CONTAINER_REGISTRY
+  - AZURE_CONTAINER_REGISTRY_NAME
+  - AZURE_TENANT_ID
+  - AZURE_RESOURCE_GROUP
+  - AZURE_SUBSCRIPTION_ID
+
+5. Switch to the Dapr integration branch and push changes:
+
+    ```bash
+    git checkout dapr-integration
+    git push
+    ```
+
+6. The GitHub Actions workflow (`.github/workflows/main.yml`) will build images and push them to Azure Container Registry, and then deploy to Azure Container Apps.
+
+> Note: Implementation of asynchronous messaging in `dapr-integration` branch uses Azure Service Bus via Dapr.
+
+### Deploy microservices to AWS
+
+1. Switch to the AWS deployment branch:
+
 ```bash
-chmod +x mvnw
-git add mvnw
-git commit -m "Give execute permission to mvnw"
-git push
-``` 
-This solution does not impact local development environments like Windows or MacOS, as they handle file permissions differently.
-You must do it from a Linux or WSL terminal.
+   git checkout deploy_to_aws
+```
 
-Or add the following step in github action before executing mvnw command.
-```yaml
-- name: Give execute permission to mvnw
-  run: chmod +x mvnw
+#### Run locally using Docker and localstack for AWS services
+
+1. Build the project (from repository root):
+   - Build all services and create Docker images:
+
+```bash
+   ./mvnw clean spring-boot:build-image -DskipTests
+```
+
+2. Start localstack and services using Docker Compose:
+
+    ```bash
+      docker-compose up -d
+    ```
+3. Run the awslocal.sh script to create required AWS resources in localstack. Script needs to be run on localstack container.
+
+   - Copy the script into the container. localstack container name is localstack-main defined in docker-compose file.
+
+     ```bash
+      docker cp ./infra/scripts/awslocal.sh localstack-main:/tmp/awslocal.sh
+      docker exec -it localstack-main bash -c "chmod +x /tmp/awslocal.sh && /tmp/awslocal.sh"
+     ```
+4. Access the services through the API Gateway (example):
+
+   POST http://localhost:8084/api/order/process
+
+   Request body example:
+
+    ```json
+    {
+    "orderId": "12536",
+    "userEmail": "pcatgothenburg@gmail.com",
+    "productCode": "2000",
+    "quantity": 4,
+    "price": 2000
+    }
+    ```
+
+#### To AWS using CI/CD pipeline
+
+2. AWS setup: Ensure you have an AWS account with necessary IAM roles and permissions.
+
+   Refer to the Terraform scripts in the `deploy_to_aws` branch for infrastructure setup. Scripts are located in the infra/envs/dev folder.
+   Run the Terraform scripts to create the required AWS resources as below.
+
+   Install Terraform and configure AWS CLI with appropriate credentials.
+
+    ```bash
+    cd infra/envs/dev
+    terraform init
+    terraform plan
+    terraform apply
+    ```
+> Note: There is github action workflow file in .github/workflows/aws_infra_setup.yml to setup aws infrastructure using terraform. 
+   But it is recommended to run terraform commands locally for now because of the state management. We still need to set up remote state management using S3 and DynamoDB for locking.
+   
+3. Configure repository secrets and environment variables in GitHub:
+   - AWS_ACCESS_KEY_ID
+   - AWS_SECRET_ACCESS_KEY
+   - AWS_REGION
+   - AWS_ECS_CLUSTER
+
+4. Push changes to the `deploy_to_aws` branch:
+5. The GitHub Actions workflow (`.github/workflows/aws_ci_cd.yml`) will build images, push them to AWS ECR, and deploy to AWS ECS.
+6. We have configured Public ALB to route traffic to api-gateway service and private ALB to route traffic between internal services.
+   Access the services through the Public ALB DNS (example):
+    POST http://<public-alb-dns>//api/order/process (POST http://dev-alb-1833499178.eu-north-1.elb.amazonaws.com/api/order/process)
+    
+    Request body example:
+    
+    ```json
+    {
+    "orderId": "1276",
+    "userEmail": "pcatgothenburg@gmail.com",
+    "productCode": "2345",
+    "quantity": 3,
+    "price": 5400
+    }
+    ```
+   Response example:
+   ```json
+   {
+      "orderStatus": "ORDER_CREATED",
+      "orderRequest": {
+      "orderId": "1276",
+      "userEmail": "pcatgothenburg@gmail.com",
+      "productCode": "2345",
+      "quantity": 3,
+      "price": 5400
+      }
+     }
+      ```
+And Order confirmation email is received to userEmail (Sender and Receiver mail has to be verified in AWS SES sandbox environment).      
+
+## Troubleshooting
+
+For problems and solutions, see the dedicated troubleshooting document: [docs/troubleshooting.md](docs/troubleshooting.md)
+
+---
+    
