@@ -6,6 +6,11 @@ on:
     branches:
       - deploy_to_azure
       - dapr-integration
+    paths:
+      - backend/**
+      - .github/workflows/main.yml
+      - dapr/**
+      - pom.xml
 
 # Enable GitHub OIDC for secure authentication to Azure
 permissions:
