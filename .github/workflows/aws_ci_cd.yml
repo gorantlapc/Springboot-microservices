@@ -4,7 +4,7 @@ name: Spring Boot Microservices CI/CD
 on:
   push:
     branches:
-      - deploy_to_aws
+      - deploy_to_eks
     paths:
       - backend/**
       - .github/workflows/aws_ci_cd.yml
@@ -41,7 +41,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION || 'eu-north-1' }}
 
       - name: Build ${{ matrix.service }}
-        run: mvn -B clean spring-boot:build-image -DskipTests -pl backend/$SERVICE_NAME -Dimage.name=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:latest
+        run: mvn -B clean spring-boot:build-image -DskipTests -pl backend/$SERVICE_NAME -Dimage.name=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:${{ github.sha }}
 
       - name: Log in to ECR
         run: |
@@ -49,8 +49,17 @@ jobs:
 
       - name: Push Docker Image to AWS ECR
         run: |
-          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:latest
-          
-      - name: deploy to AWS ECS
+          docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:${{ github.sha }}
+
+      - name: Update GitOps Repo
         run: |
-          aws ecs update-service --cluster $CLUSTER_NAME --service dev-$SERVICE_NAME --force-new-deployment --region $AWS_REGION
+          git clone https://github.com/gorantlapc/platform-gitops.git
+          cd platform-gitops
+
+          sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:${{ github.sha }}|g" apps/$SERVICE_NAME/deployment.yaml
+
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git commit -am "Update image to ${{ github.sha }}"
+          git push
