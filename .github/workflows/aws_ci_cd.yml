@@ -55,6 +55,7 @@ jobs:
   update-gitops:
     needs: build-and-deploy
     runs-on: ubuntu-latest
+    environment: dev_aws
     env:
       AWS_REGION: ${{ vars.AWS_REGION || 'eu-north-1' }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
