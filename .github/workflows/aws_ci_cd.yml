@@ -51,15 +51,25 @@ jobs:
         run: |
           docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:${{ github.sha }}
 
+
+  update-gitops:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    steps:
       - name: Update GitOps Repo
         run: |
           git clone https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/gorantlapc/platform-gitops.git
           cd platform-gitops
 
-          sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:${{ github.sha }}|g" apps/$SERVICE_NAME/deployment.yaml
+          sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-api-gateway:${{ github.sha }}|g" apps/api-gateway/deployment.yaml
+          sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-order-service:${{ github.sha }}|g" apps/order-service/deployment.yaml
+          sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-payment-service:${{ github.sha }}|g" apps/payment-service/deployment.yaml
+          sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-inventory-service:${{ github.sha }}|g" apps/inventory-service/deployment.yaml
+          sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-notification-service:${{ github.sha }}|g" apps/notification-service/deployment.yaml
+          sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-user-service:${{ github.sha }}|g" apps/user-service/deployment.yaml
 
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
-          git commit -am "Update image to ${{ github.sha }}"
+          git commit -am "Update all services image tag to ${{ github.sha }}"
           git push
