@@ -51,15 +51,9 @@ jobs:
         run: |
           docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:${{ github.sha }}
 
-      - name: Checkout GitOps repo
-        uses: actions/checkout@v3
-        with:
-          repository: gorantlapc/platform-gitops
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: platform-gitops
-
       - name: Update GitOps Repo
         run: |
+          git clone https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/gorantlapc/platform-gitops.git
           cd platform-gitops
 
           sed -i "s|image: .*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/dev-$SERVICE_NAME:${{ github.sha }}|g" apps/$SERVICE_NAME/deployment.yaml
